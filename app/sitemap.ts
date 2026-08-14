@@ -1,0 +1,2 @@
+import type { MetadataRoute } from "next";
+export default function sitemap():MetadataRoute.Sitemap{return ["en","ru","es"].map(l=>({url:`https://forma.eolabs.dev/${l}`,lastModified:new Date(),changeFrequency:"monthly",priority:l==="en"?1:.9,alternates:{languages:{en:"https://forma.eolabs.dev/en",ru:"https://forma.eolabs.dev/ru",es:"https://forma.eolabs.dev/es","x-default":"https://forma.eolabs.dev/en"}}}))}

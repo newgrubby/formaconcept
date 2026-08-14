@@ -1,0 +1,24 @@
+"use client";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useEffect,useRef,useState } from "react";
+import type { Locale,dictionaries } from "@/lib/i18n";
+const Scene=dynamic(()=>import("./Scene"),{ssr:false});
+type Copy=(typeof dictionaries)[Locale];
+function persistLocale(l:string){document.cookie=`forma-locale=${l};path=/;max-age=31536000;samesite=lax`}
+export default function Experience({locale,copy}:{locale:Locale,copy:Copy}){
+ const hero=useRef<HTMLElement>(null);const [progress,setProgress]=useState(0);const [menu,setMenu]=useState(false);const [material,setMaterial]=useState(0);const [atlas,setAtlas]=useState(0);const [cursor,setCursor]=useState({x:-100,y:-100,label:"EXPLORE"});
+ useEffect(()=>{document.documentElement.lang=locale;const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;const onScroll=()=>{if(!hero.current)return;setProgress(reduced?1:Math.max(0,Math.min(1,-hero.current.getBoundingClientRect().top/(hero.current.offsetHeight-innerHeight))))};onScroll();addEventListener("scroll",onScroll,{passive:true});return()=>removeEventListener("scroll",onScroll)},[locale]);
+ return <><a className="skip" href="#content">Skip to content</a><div className="cursor" style={{transform:`translate3d(${cursor.x}px,${cursor.y}px,0)`}}>{cursor.label}</div>
+ <header><Link className="logo" href={`/${locale}`}>FORMA</Link><nav>{copy.nav.map((n,i)=><a key={n} href={["#journey","#materials","#atlas","#contact"][i]}>{n}</a>)}</nav><div className="langs">{(["ru","en","es"] as const).map(l=><Link onClick={()=>persistLocale(l)} className={l===locale?"active":""} key={l} href={`/${l}`}>{l}</Link>)}</div><button className="menuBtn" onClick={()=>setMenu(!menu)} aria-expanded={menu}>{menu?copy.close:copy.menu}</button></header>
+ {menu&&<div className="mobileMenu">{copy.nav.map((n,i)=><a onClick={()=>setMenu(false)} key={n} href={["#journey","#materials","#atlas","#contact"][i]}>{n}</a>)}</div>}
+ <main id="content" onPointerMove={e=>setCursor({x:e.clientX+14,y:e.clientY+14,label:(e.target as HTMLElement).closest("button,a")?"VIEW":"EXPLORE"})}>
+ <section id="journey" ref={hero} className="hero"><div className="heroSticky"><div className="scene" aria-hidden><Scene progress={progress}/></div><div className="grain"/><div className="heroText"><p>{copy.heroKicker}</p><h1>{copy.heroTitle.split("\n").map(x=><span key={x}>{x}</span>)}</h1></div><div className="scrollHint">{copy.scroll}<i style={{height:`${20+progress*60}px`}}/></div><div className="timeline">{copy.stages.map((s,i)=><div className={progress>=i/3?"on":""} key={s}><b>0{i+1}</b>{s}</div>)}</div></div></section>
+ <section className="manifest"><p className="eyebrow">01 — MANIFESTO</p><h2>{copy.manifesto}</h2><p className="lead">{copy.manifestoBody}</p></section>
+ <section className="sequence">{copy.sequence.map((s,i)=><article key={s}><span>0{i+1}</span><div className={`diagram d${i}`}/><h3>{s}</h3></article>)}</section>
+ <section id="materials" className={`materials m${material}`} onPointerMove={e=>setMaterial(Math.min(3,Math.floor((e.clientX/innerWidth)*4)))}><div><p className="eyebrow">04 — TACTILE INDEX</p><h2>{copy.layersTitle}</h2><p>{copy.layersBody}</p></div><div className="materialNames">{copy.materials.map((m,i)=><button onFocus={()=>setMaterial(i)} onClick={()=>setMaterial(i)} className={i===material?"active":""} key={m}><span>0{i+1}</span>{m}</button>)}</div></section>
+ <section className="transform"><div className="transformStage" style={{"--p":progress} as React.CSSProperties}><div className="oldMass"/><div className="newMass"/><span>{copy.before}</span><span>{copy.after}</span></div><h2>{copy.transformTitle}</h2></section>
+ <section id="atlas" className="atlas"><div><p className="eyebrow">08 — CARTOGRAPHY</p><h2>{copy.atlasTitle}</h2><p>{copy.atlasNote}</p></div><div className="map">{copy.atlasTypes.map((t,i)=><button style={{left:`${12+(i*19)%76}%`,top:`${18+(i*23)%64}%`}} onClick={()=>setAtlas(i)} className={atlas===i?"active":""} key={t}><i/>{t}</button>)}<div className="mapInfo"><b>0{atlas+1}</b><h3>{copy.atlasTypes[atlas]}</h3><p>Concept study · Temperate climate<br/>Status — spatial research</p></div></div></section>
+ <section className="adapt"><div className={`adaptiveShape a${atlas%5}`} aria-hidden/><div><p className="eyebrow">09 — ADAPTATION</p><h2>{copy.adaptTitle}</h2><p>{copy.adaptBody}</p><div className="adaptTabs">{copy.atlasTypes.map((t,i)=><button onClick={()=>setAtlas(i)} className={atlas===i?"active":""} key={t}>{t}</button>)}</div></div></section>
+ <section id="contact" className="cta"><div className="ctaLines"/><h2>{copy.cta}</h2><a href="https://eolabs.co" target="_blank" rel="noreferrer">{copy.start}<span>↗</span></a></section>
+ </main><footer><b>FORMA</b><p>{copy.disclaimer}</p><a href="https://eolabs.co">EO LABS ↗</a></footer></>}
